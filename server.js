@@ -79,7 +79,17 @@ app.get('/api/timestamp/:date_string?', (req, res) => {
   }  
 });
 
-
+app.get('/api/whoami', (req, res) => {
+  res.json(
+    {
+      // "value": Object.keys(req),
+      "ipaddress": req.ip,
+      "language": req.headers["accept-language"],
+      "sotfware": req.headers["user-agent"],
+      // "req-headers": req.headers
+    }
+  )
+});
 
 // listen for requests :)
 var listener = app.listen(port, function () {
