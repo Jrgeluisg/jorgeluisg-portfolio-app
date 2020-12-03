@@ -85,7 +85,7 @@ app.get('/api/whoami', (req, res) => {
       // "value": Object.keys(req),
       "ipaddress": req.ip,
       "language": req.headers["accept-language"],
-      "sotfware": req.headers["user-agent"],
+      "software": req.headers["user-agent"],
       // "req-headers": req.headers
     }
   )
