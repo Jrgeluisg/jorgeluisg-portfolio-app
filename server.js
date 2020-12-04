@@ -4,6 +4,9 @@
 // init project
 var express = require('express');
 var app = express();
+var mongo = require('mongodb');
+var mongoose = require('mongoose');
+var bodyParser = require('body-parser');
 var port = process.env.PORT || 5000;
 
 // enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
@@ -29,6 +32,10 @@ app.get("/requestHeaderParser", function (req, res) {
   res.sendFile(__dirname + '/views/requestHeaderParser.html');
 });
 
+app.get("/urlShortenerMicroservice", function (req, res) {
+  res.sendFile(__dirname + '/views/urlShortenerMicroservice.html');
+});
+
 // your first API endpoint... 
 app.get("/api/hello", function (req, res) {
   console.log({greeting: 'hello API'});
@@ -42,8 +49,9 @@ A request to /api/timestamp/:date? with a valid date should return a JSON object
 A request to /api/timestamp/1451001600000 should return { unix: 1451001600000, utc: "Fri, 25 Dec 2015 00:00:00 GMT" } 
 Your project can handle dates that can be successfully parsed by new Date(date_string)
 An empty date parameter should return the current time in a JSON object with a unix key
-An empty date parameter should return the current time in a JSON object with a utc key */
-
+An empty date parameter should return the current time in a JSON object with a utc key
+*/
+// Timestamp Project
 app.get('/api/timestamp', (req, res) => {
   let now = new Date();
   res.json({
@@ -79,6 +87,7 @@ app.get('/api/timestamp/:date_string?', (req, res) => {
   }  
 });
 
+// Header Requests
 app.get('/api/whoami', (req, res) => {
   res.json(
     {
@@ -88,9 +97,17 @@ app.get('/api/whoami', (req, res) => {
       "software": req.headers["user-agent"],
       // "req-headers": req.headers
     }
-  )
+  );
 });
 
+// URLS Shortening Service
+app.post('/api/shorturl/new', (req, res) => {
+  console.log('post request called');
+  console.log(req.params, '<= req.params');
+  res.json({
+    "success":"post request processed"
+  });
+});
 // listen for requests :)
 var listener = app.listen(port, function () {
   console.log('Your app is listening on port ' + listener.address().port);
