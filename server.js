@@ -132,8 +132,8 @@ app.post('/api/shorturl/new', (request, response) => {
 
   let urlRegex = new RegExp(/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)?/gi);
 
-  if (!inputUrl.match(urlRegex)) {
-    response.json({error: 'invalid url'});
+  if(!inputUrl.match(urlRegex)){
+    response.json({error: 'Invalid URL'})
     return
   }
   responseObject.original_url = inputUrl;
