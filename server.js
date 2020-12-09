@@ -114,13 +114,76 @@ app.get('/api/whoami', (req, res) => {
 
 // URLS Shortening Service
 
-// Build a schema and model to store saved URLS
-let ShortURl = mongoose.model('ShortURL', new mongoose.Schema({
-  short_url: String,
-  original_url: String,
-  suffix: String
-}));
+// Creating the URL Schema and model 
+let urlSchema = new mongoose.Schema({
+  original: {type: String, required: true},
+  short: Number,
+});
 
+let Url = mongoose.model('URL', urlSchema); 
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({extended: false}));
+
+let responseObject = {};
+
+app.post('/api/shorturl/new', (request, response) => {
+  let inputUrl = request.body.url;
+
+  let urlRegex = new RegExp(/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)?/gi);
+
+  if (!inputUrl.match(urlRegex)) {
+    response.json({error: 'InvalidUrl'});
+    return
+  }
+  responseObject.original_url = inputUrl;
+  // let inputShort = shortid.generate();
+  let inputShort = 1;
+
+  Url.findOne({})
+  .sort({short:'desc'})
+  .exec((error, result) => {
+    if (!error && result != undefined) {
+      inputShort = result.short + 1;
+    }
+    if (!error) {
+      Url.findOneAndUpdate(
+        {original: inputUrl},
+        {original: inputUrl, short:inputShort},
+        {new: true, upsert: true, useFindAndModify: false},
+        (error, savedUrl) => {
+          if(!error) {
+            responseObject.short_url = savedUrl.short;
+            response.json(responseObject);
+          }
+        }
+      )
+    }
+  });
+
+  app.get('/api/shorturl/:input', (request, response) => {
+    let input = request.params.input;
+
+    Url.findOne({short: input}, (error, result) => {
+      if (!error && result != undefined) {
+        response.redirect(result.original);
+      } else {
+        response.json({error: 'url not found'});
+      }
+    })
+  });
+
+  // response.json(responseObject);
+});
+
+// Build a schema and model to store saved URLS
+// let ShortURl = mongoose.model('ShortURL', new mongoose.Schema({
+//   short_url: String,
+//   original_url: String,
+//   suffix: String
+// }));
+
+/*
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({extended: false}));
 
@@ -155,6 +218,7 @@ app.get('/api/shorturl/:short_url?', (req, res) => {
     res.redirect(urlForRedirect.original_url);
   });
 });
+*/
 
 // listen for requests :)
 var listener = app.listen(port, function () {
