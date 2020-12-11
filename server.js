@@ -48,6 +48,9 @@ app.get("/urlShortenerMicroservice", function (req, res) {
   res.sendFile(__dirname + '/views/urlShortenerMicroservice.html');
 });
 
+app.get("/exerciseTracker", function (req, res) {
+  res.sendFile(__dirname + '/views/exerciseTracker.html');
+});
 // your first API endpoint... 
 app.get("/api/hello", function (req, res) {
   console.log({greeting: 'hello API'});
@@ -219,6 +222,88 @@ app.get('/api/shorturl/:short_url?', (req, res) => {
   });
 });
 */
+
+// Exercise tracker
+
+// parse application/x-www-form-urlencoded
+// app.use(bodyParser.urlencoded({extended: false}));
+
+let exerciseSessionSchema = new mongoose.Schema({
+  description: {type: String, required: true},
+  duration: {type: Number, require: true},
+  date: {type: Date}
+});
+
+let userSchema = new mongoose.Schema({
+  username: {type: String, require:true},
+  log: [exerciseSessionSchema]
+});
+
+let Session = mongoose.model('Session', exerciseSessionSchema);
+
+let User = mongoose.model('User', userSchema)
+
+// parse application/x-www-form-urlencoded
+app.post('/api/exercise/new-user', bodyParser.urlencoded({extended: false}), (request, response) => {
+  let newUser = new User({
+    username: request.body.username
+  });
+  newUser.save( (error, savedUser) => {
+    if (!error) {
+      let responseObject = {};
+      responseObject.username = savedUser.username;
+      responseObject['_id'] = savedUser.id;
+
+      response.json(responseObject);
+    } 
+  });
+});
+
+
+app.get('/api/exercise/users', (request, response) => {
+  User.find({}, (error, arrayOfUsers) => {
+    if (!error) {
+      response.json(arrayOfUsers);
+    }
+  })
+});
+
+
+app.post('/api/exercise/add', bodyParser.urlencoded({extended: false}), (request, response) => {
+  let newSession = new Session({
+    description: request.body.description,
+    duration: parseInt(request.body.date),
+    date: request.body.date
+  });
+
+
+  if (newSession.date === '') {
+    newSession.date = new Date().toISOString().substring(0, 10);
+  }
+
+  User.findByIdAndUpdate(
+    request.body.userId,
+    {$push: {log: newSession}},
+    {new: true, useFindAndModify:false},
+    (error, updatedUser) => {
+      if (!error) {
+        responseObject = {};
+        responseObject['_id'] = updatedUser.id;
+        responseObject.username = updatedUser.username;
+        responseObject.date = new Date(newSession.date).toDateString();
+        responseObject.description = newSession.description;
+        responseObject.duration = newSession.duration;
+        response.json(responseObject);
+      }
+    }
+  );
+  
+});
+
+app.get('/api/exercise/log?{userId}', (request, response) => {
+
+});
+
 
 // listen for requests :)
 var listener = app.listen(port, function () {
